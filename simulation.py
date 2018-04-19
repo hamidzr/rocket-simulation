@@ -1,5 +1,6 @@
 from utils.atmosphere import Atmosphere
 from utils.simulation_data import SimulationData
+from utils.helpers import logger
 import math
 
 
@@ -88,15 +89,18 @@ def SolveTakeoffAngle(launch_ratio, data):
     if error <= TargetAltitude * errorAllowance:
       success = 1
       print("--- Error = %fm after %d attempts.\n", error, attempt)
-      return
+      return [takeoff_angle, success]
     # end
 
+    # logger.debug(data.z[data.I])
     # If didn't reach altitude...
+    # logger.debug('z', data.z[0:10])
+    # logger.debug('x', data.x[0:10])
     if data.z[data.I] < TargetAltitude:
       # If takeoff angle is 0, not enough fuel!
       if takeoff_angle == 0:
         success = 0
-        return
+        return [takeoff_angle, success]
       # end
 
       # Need to decrease the angle
@@ -269,8 +273,8 @@ takeoff_angle = 0.00001
 takeoff_angle_BEST = takeoff_angle
 landingBurnAltitude = 6000 # m
 landingBurnAltitude_BEST = landingBurnAltitude
-I_apex_BEST = 1
-I_land_BEST = 1
+I_apex_BEST = 0 # WARN was 1
+I_land_BEST = 0
 
 # Create simulation data
 data = SimulationData(0.001, 2000)
@@ -384,7 +388,3 @@ Fd = data.Fd[0:I_land_BEST]
 # xlabel('Time')
 # ylabel("Drag")
 # title("Fd vs Time")
-
-
-
-

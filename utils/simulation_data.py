@@ -1,22 +1,23 @@
 import numpy as np
+from utils.helpers import logger
 
 # WARN TODO arrays start at 1 in matlab, array indices are refrenced w/ ()
 class SimulationData:
   def __init__(self, dt, tMax):
-    self.dt = 0.01
-    self.t = []
-    self.Fd = []
-    self.Ft = []
-    self.m = []
-    self.theta = []
-    self.z = []
-    self.vz = []
-    self.az = []
-    self.x = []
-    self.vx = []
-    self.ax = []
+    # self.dt = 0.01
+    # self.t = []
+    # self.Fd = []
+    # self.Ft = []
+    # self.m = []
+    # self.theta = []
+    # self.z = []
+    # self.vz = []
+    # self.az = []
+    # self.x = []
+    # self.vx = []
+    # self.ax = []
 
-    self.I = 2
+    self.I = 1 # WARN changed 2 to 1
 
     self.dt = dt
     self.t = np.arange(0, tMax, dt) # 0:dt:tMax
@@ -32,18 +33,19 @@ class SimulationData:
     self.ax = np.zeros(len(self.t))
 
   def SetInitialConditions(self, mFull):
-    self.z[1] = 0
-    self.vz[1] = 0
-    self.az[1] = -9.81
-    self.x[1] = 0
-    self.vx[1] = 0
-    self.ax[1] = 0
-    self.m[1] = mFull; # Start full
-    self.Fd[1] = 0
-    self.Ft[1] = 0
+    self.z[0] = 0
+    self.vz[0] = 0
+    self.az[0] = -9.81
+    self.x[0] = 0
+    self.vx[0] = 0
+    self.ax[0] = 0
+    self.m[0] = mFull; # Start full
+    self.Fd[0] = 0
+    self.Ft[0] = 0
 
+  # TODO what does this do?
   def ResetFrame(self):
-    self.I = 2
+    self.I = 1 # WARN changed 2 to 1
 
   def Thrust(self, mdot, vjet, Pe, Pa, Ae, N):
     self.m[self.I] = self.m[self.I-1] - mdot * self.dt * N
@@ -62,7 +64,8 @@ class SimulationData:
     return relWind
 
   def UpdateVZ(self, dv_axial, g):
-    self.vz[self.I] = self.vz[self.I-1] + dv_axial * np.cos(self.theta[self.I-1]) - g*self.dt
+    vz =  self.vz[self.I-1] + dv_axial * np.cos(self.theta[self.I-1]) - g*self.dt
+    self.vz[self.I] = vz
 
 
   def UpdateAngle(self, dv_axial, thetaWindow, thetaAngle):
@@ -92,8 +95,8 @@ class SimulationData:
 
   def velocity(self, offset):
     # v = (self.vz[self.I + offset].^2 + self.vx[self.I + offset].^2).^0.5
-    t1 = math.pow(self.vz[self.I + offset], 2) # WARN changes
-    t2 = math.pow(self.vx[self.I + offset], 2)
-    v = t1 + math.sqrt(t2)
+    t1 = np.power(self.vz[self.I + offset], 2) # WARN changes
+    t2 = np.power(self.vx[self.I + offset], 2)
+    v = t1 + np.sqrt(t2)
     return v
 
