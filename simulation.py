@@ -75,7 +75,7 @@ for attempt in range(0, MaxAttempts): # WARN
 
   # Detach second stage
   print("2) Detaching second stage.\n")
-  data.m(I_apex) = data.m(I_apex) - mSecondStage
+  data.m[I_apex] = data.m[I_apex] - mSecondStage
 
   # At this point we're at apex.  Time to solve best landing burn
   print("3) Solving landing burn......\n")
@@ -88,9 +88,9 @@ for attempt in range(0, MaxAttempts): # WARN
   print("--- Landed with %fkg of fuel at %fm/s.\n", remainingMass, landingSpeed)
 
   # Is this optimal?
-  if data.vx(I_apex) >= MaxDiscoveredVx and landingSpeed < LandingVelocityAllowance:
+  if data.vx[I_apex] >= MaxDiscoveredVx and landingSpeed < LandingVelocityAllowance:
     print("*** This is a new optimal spec!\n")
-    MaxDiscoveredVx = data.vx(I_apex)
+    MaxDiscoveredVx = data.vx[I_apex]
     launch_ratio_BEST = launch_ratio
     takeoff_angle_BEST = takeoff_angle
     landingBurnAltitude_BEST = landingBurnAltitude
@@ -127,13 +127,13 @@ print("Landing Burn Altitude = %f\n", landingBurnAltitude_BEST)
 
 ## Plots
 # First need to trim the results
-t = data.t(0:I_land_BEST)
-z = data.z(0:I_land_BEST)
-vz = data.vz(0:I_land_BEST)
-az = data.az(0:I_land_BEST)
-x = data.x(0:I_land_BEST)
-vx = data.vx(0:I_land_BEST)
-Fd = data.Fd(0:I_land_BEST)
+t = data.t[0:I_land_BEST]
+z = data.z[0:I_land_BEST]
+vz = data.vz[0:I_land_BEST]
+az = data.az[0:I_land_BEST]
+x = data.x[0:I_land_BEST]
+vx = data.vx[0:I_land_BEST]
+Fd = data.Fd[0:I_land_BEST]
 
 # TODO plots
 # figure(0)
@@ -179,8 +179,8 @@ def SolveThrust(vjet, T_sea, T_vac, Isp_sea, Isp_vac, N):
 # Will start at 0 to ensure the desired altitude can even be reached.
 def SolveTakeoffAngle(launch_ratio, data):
   # Bring in globals
-  global atmosphere TargetAltitude mSecondStage A
-  global m0_propellant mEmpty m0_full Cd_up Pe Ae mdot vjet
+  global atmosphere, TargetAltitude, mSecondStage, A
+  global m0_propellant, mEmpty, m0_full, Cd_up, Pe, Ae, mdot, vjet
 
   # Determine when to stop
   N = 9 # Use all engines
@@ -195,16 +195,16 @@ def SolveTakeoffAngle(launch_ratio, data):
   errorAllowance = 0.001
   while True: # Keep looping until terminated
     # Initial conditions
-    data.theta(0) = 0
+    data.theta[0] = 0
 
     # Loop until at peak altitude
     data.ResetFrame()
-    while data.vz(data.I-1) >= 0:
+    while data.vz[data.I-1] >= 0:
       # Update atmosphere
-      [Pa, rho, T, g] = atmosphere.ParametersAtAltitude(data.z(data.I-1))
+      [Pa, rho, T, g] = atmosphere.ParametersAtAltitude(data.z[data.I-1])
 
       # Update mass
-      if data.m(data.I-1) > stopMass:
+      if data.m[data.I-1] > stopMass:
         data.Thrust(mdot, vjet, Pe, Pa, Ae, N)
       else:
         data.NoThrust()
@@ -212,10 +212,10 @@ def SolveTakeoffAngle(launch_ratio, data):
 
       # Angle of attack + Drag
       relWind = data.RelativeWind()
-      data.Fd(data.I) = 0.5 * Cd_up * A * rho * relWind.^2
+      data.Fd[data.I] = 0.5 * Cd_up * A * rho * relWind.^2
 
       # Axial -> X/Y
-      a_axial = (data.Ft(data.I) - data.Fd(data.I)) / data.m(data.I)
+      a_axial = (data.Ft[data.I] - data.Fd[data.I]) / data.m[data.I]
       dv_axial = a_axial * data.dt
       data.UpdateVZ(dv_axial, g)
 
@@ -234,7 +234,7 @@ def SolveTakeoffAngle(launch_ratio, data):
 
     # Evaluate
     attempt = attempt + 1
-    error = abs(data.z(data.I) - TargetAltitude)
+    error = abs(data.z[data.I] - TargetAltitude)
     if error <= TargetAltitude * errorAllowance:
       success = 1
       print("--- Error = %fm after %d attempts.\n", error, attempt)
@@ -242,7 +242,7 @@ def SolveTakeoffAngle(launch_ratio, data):
     # end
 
     # If didn't reach altitude...
-    if data.z(data.I) < TargetAltitude:
+    if data.z[data.I] < TargetAltitude:
       # If takeoff angle is 0, not enough fuel!
       if takeoff_angle == 0:
         success = 0
@@ -295,19 +295,19 @@ function landingBurnAltitude = SolveLandingBurn(data, I_apex)
     outOfFuel = 0 # When burn expires due to lack of fuel
 
     # Loop until landed
-    while data.z(data.I-1) > 0:
+    while data.z[data.I-1] > 0:
       # Update atmosphere
-      [Pa, rho, T, g] = atmosphere.ParametersAtAltitude(data.z(data.I-1))
+      [Pa, rho, T, g] = atmosphere.ParametersAtAltitude(data.z[data.I-1])
 
       # Initiate burn?
-      if burnInitiated_I == 0 and data.z(data.I-1) <= landingBurnAltitude:
+      if burnInitiated_I == 0 and data.z[data.I-1] <= landingBurnAltitude:
         burnInitiated_I = data.I
       # end
 
       # Done with burn?
       if burnInitiated_I > 0 and burnStopped_I == 0:
         # Out of fuel?
-        if data.m(data.I-1) <= stopMass:
+        if data.m[data.I-1] <= stopMass:
           burnStopped_I = data.I
           outOfFuel = 1
           elif data.velocity(-1) < LandingVelocityAllowance/4:
@@ -325,10 +325,10 @@ function landingBurnAltitude = SolveLandingBurn(data, I_apex)
 
       # Angle of attack + Drag
       relWind = data.RelativeWind()
-      data.Fd(data.I) = 0.5 * Cd_down * A * rho * relWind.^2
+      data.Fd[data.I] = 0.5 * Cd_down * A * rho * relWind.^2
 
       # Axial -> X/Y
-      a_axial = (data.Ft(data.I) + data.Fd(data.I)) / data.m(data.I)
+      a_axial = (data.Ft[data.I] + data.Fd[data.I]) / data.m[data.I]
       dv_axial = a_axial * data.dt
       data.UpdateVZ(dv_axial, g)
 
@@ -348,7 +348,7 @@ function landingBurnAltitude = SolveLandingBurn(data, I_apex)
     # Determine if success or not
     landingVelocity = data.velocity(0)
     landedSafely = landingVelocity < LandingVelocityAllowance
-    remainingFuel = data.m(data.I) - stopMass
+    remainingFuel = data.m[data.I] - stopMass
 
     # If landed safely, then we found appropriate altitude to burn
     # engine. Stop the simulation here.
@@ -361,14 +361,14 @@ function landingBurnAltitude = SolveLandingBurn(data, I_apex)
     # Ok well did we stop burning early?
     if manualBurnShutdown > 0:
       # Let's just reduce the burn altitude by that much
-      landingBurnAltitude = landingBurnAltitude - data.z(burnStopped_I)
+      landingBurnAltitude = landingBurnAltitude - data.z[burnStopped_I]
 
     # Did we run out of fuel?
     elif outOfFuel:
       # If we ran out of fuel at ~500m or less, and didn't reach nearly
       # safe velocities, then chances are we just didn't have enough fuel
       # regardless of when we burn. Fail
-      if data.z(burnStopped_I) <= 500:
+      if data.z[burnStopped_I] <= 500:
         print("--- Ran out of fuel at low altitude.\n")
         return
       # end
