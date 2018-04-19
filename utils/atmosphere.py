@@ -1,4 +1,5 @@
 import numpy as np
+from utils.helpers import logger
 
 def filter(pred, lst):
   # Filters lst and returns the matching indices
@@ -56,7 +57,7 @@ class Atmosphere:
 
       # Now calculate pressure
       if B == 0:
-        p = p0 * exp(-g * (z - z0) / (self.R * T0))
+        p = p0 * np.exp(-g * (z - z0) / (self.R * T0))
       else:
         p = p0 * np.power((T0 / T), (g / (self.R * B)))
       # end

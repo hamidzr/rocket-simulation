@@ -1,6 +1,7 @@
 from utils.atmosphere import Atmosphere
 from utils.simulation_data import SimulationData
-import math
+from utils.helpers import logger
+import numpy as np
 
 
 ## Rocket Model
@@ -62,7 +63,7 @@ def SolveTakeoffAngle(launch_ratio, data):
       # Angle of attack + Drag
       relWind = data.RelativeWind()
       # data.Fd[data.I] = 0.5 * Cd_up * A * rho * relWind.^2
-      data.Fd[data.I] = 0.5 * Cd_up * A * rho * math.pow(relWind, 2)
+      data.Fd[data.I] = 0.5 * Cd_up * A * rho * np.power(relWind, 2)
 
       # Axial -> X/Y
       a_axial = (data.Ft[data.I] - data.Fd[data.I]) / data.m[data.I]
@@ -88,15 +89,18 @@ def SolveTakeoffAngle(launch_ratio, data):
     if error <= TargetAltitude * errorAllowance:
       success = 1
       print("--- Error = %fm after %d attempts.\n", error, attempt)
-      return
+      return [takeoff_angle, success]
     # end
 
+    # logger.debug(data.z[data.I])
     # If didn't reach altitude...
+    # logger.debug('z', data.z[0:10])
+    # logger.debug('x', data.x[0:10])
     if data.z[data.I] < TargetAltitude:
       # If takeoff angle is 0, not enough fuel!
       if takeoff_angle == 0:
         success = 0
-        return
+        return [takeoff_angle, success]
       # end
 
       # Need to decrease the angle
@@ -177,7 +181,7 @@ def SolveLandingBurn(data, I_apex):
       # Angle of attack + Drag
       relWind = data.RelativeWind()
       # data.Fd[data.I] = 0.5 * Cd_down * A * rho * relWind.^2
-      data.Fd[data.I] = 0.5 * Cd_down * A * rho * math.pow(relWind, 2)
+      data.Fd[data.I] = 0.5 * Cd_down * A * rho * np.power(relWind, 2)
 
       # Axial -> X/Y
       a_axial = (data.Ft[data.I] + data.Fd[data.I]) / data.m[data.I]
@@ -249,7 +253,7 @@ m0_full = m0_propellant + mSecondStage + mEmpty # kg
 Cd_up = 0.3
 Cd_down = 0.82
 N = 9 # Number of engines
-A = math.pow(3.7, 2) / 4 # Diameter of 3.7m
+A = np.power(3.7, 2) / 4 # Diameter of 3.7m
 Thrust_vacuum = 8227000 # N
 Thrust_ground = 7607000 # N
 Isp_vacuum = 311 # s
@@ -269,8 +273,8 @@ takeoff_angle = 0.00001
 takeoff_angle_BEST = takeoff_angle
 landingBurnAltitude = 6000 # m
 landingBurnAltitude_BEST = landingBurnAltitude
-I_apex_BEST = 1
-I_land_BEST = 1
+I_apex_BEST = 0 # WARN was 1
+I_land_BEST = 0
 
 # Create simulation data
 data = SimulationData(0.001, 2000)
@@ -384,7 +388,3 @@ Fd = data.Fd[0:I_land_BEST]
 # xlabel('Time')
 # ylabel("Drag")
 # title("Fd vs Time")
-
-
-
-
