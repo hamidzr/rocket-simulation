@@ -41,7 +41,7 @@ class Atmosphere:
     [T0, p0, B, z0] = self._Dynamics(z)
 
     # Now calculate gravity
-    g = np.power(self.g0 * (self.R0 / (self.R0 + z/1000)), 2)
+    g = self.g0 * np.power((self.R0 / (self.R0 + z/1000)), 2)
 
     # Above critical alt?
     if z > 180000:
