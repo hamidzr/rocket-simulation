@@ -88,7 +88,7 @@ def SolveTakeoffAngle(launch_ratio, data):
     error = abs(data.z[data.I] - TargetAltitude)
     if error <= TargetAltitude * errorAllowance:
       success = 1
-      print("--- Error = %fm after %d attempts.\n", error, attempt)
+      print("--- Error = {}m after {} attempts.\n".format(error, attempt))
       return [takeoff_angle, success]
     # end
 
@@ -209,8 +209,8 @@ def SolveLandingBurn(data, I_apex):
     # If landed safely, then we found appropriate altitude to burn
     # engine. Stop the simulation here.
     if landedSafely:
-      print("--- Landed safely after #%d attempts.\n", attempt)
-      print("--- Landing burn altitude = %dm\n", landingBurnAltitude)
+      print("--- Landed safely after #{} attempts.\n".format(attempt))
+      print("--- Landing burn altitude = {}m\n".format(landingBurnAltitude))
       return
     # end
 
@@ -287,11 +287,11 @@ ratioAdjustmentDir = -1
 MaxAttempts = 10
 for attempt in range(0, MaxAttempts): # WARN 
   # Print attempt
-  print("##########\nStarting attempt #%d/%d\n", attempt, MaxAttempts)
+  print("##########\nStarting attempt #{}/{}\n".format(attempt, MaxAttempts))
   if launch_ratio > MAX_LAUNCH_RATIO:
     launch_ratio = MAX_LAUNCH_RATIO
   # end
-  print("Launch fuel ratio = %f\n", launch_ratio)
+  print("Launch fuel ratio = {}\n".format(launch_ratio))
 
   # Solve the takeoff angle
   print("1) Solving takeoff angle......\n")
@@ -306,7 +306,7 @@ for attempt in range(0, MaxAttempts): # WARN
     ratioAdjustmentDir = 1
     continue
   # end
-  print("--- Found takeoff angle = %f\n", takeoff_angle)
+  print("--- Found takeoff angle = {}\n".format(takeoff_angle))
 
   # Detach second stage
   print("2) Detaching second stage.\n")
@@ -320,7 +320,7 @@ for attempt in range(0, MaxAttempts): # WARN
   # Print some stats
   remainingMass = data.RemainingMass(mEmpty)
   landingSpeed = data.velocity(0)
-  print("--- Landed with %fkg of fuel at %fm/s.\n", remainingMass, landingSpeed)
+  print("--- Landed with {}kg of fuel at {}m/s.\n".format(remainingMass, landingSpeed))
 
   # Is this optimal?
   if data.vx[I_apex] >= MaxDiscoveredVx and landingSpeed < LandingVelocityAllowance:
@@ -354,10 +354,10 @@ for attempt in range(0, MaxAttempts): # WARN
 # end
 
 print("##########\nAlgorithm complete!\n")
-print("Best launch ratio = %f\n", launch_ratio_BEST)
-print("Required takeoff angle = %f\n", takeoff_angle_BEST)
-print("Achieved horizontal velocity = %f m/s\n", MaxDiscoveredVx)
-print("Landing Burn Altitude = %f\n", landingBurnAltitude_BEST)
+print("Best launch ratio = {}\n".format(launch_ratio_BEST))
+print("Required takeoff angle = {}\n".format(takeoff_angle_BEST))
+print("Achieved horizontal velocity = {} m/s\n".format(MaxDiscoveredVx))
+print("Landing Burn Altitude = {}\n".format(landingBurnAltitude_BEST))
 
 
 ## Plots
