@@ -2,6 +2,11 @@ from utils.atmosphere import Atmosphere
 from utils.simulation_data import SimulationData
 from utils.helpers import logger
 import numpy as np
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--dt", type=float, default=0.001, help="simulation tick")
+args = parser.parse_args()
 
 
 ## Rocket Model
@@ -277,7 +282,7 @@ I_apex_BEST = 0 # WARN was 1
 I_land_BEST = 0
 
 # Create simulation data
-data = SimulationData(0.001, 2000)
+data = SimulationData(args.dt, 2000)
 
 
 ## The Model
