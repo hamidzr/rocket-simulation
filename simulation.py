@@ -6,6 +6,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dt", type=float, default=0.001, help="simulation tick")
+parser.add_argument("--max_attempts", type=int, default=10, help="max number of attempts")
 args = parser.parse_args()
 
 
@@ -289,7 +290,7 @@ data = SimulationData(args.dt, 2000)
 print("Starting search......\n")
 ratioAdjustment = 0.01
 ratioAdjustmentDir = -1
-MaxAttempts = 10
+MaxAttempts = args.max_attempts
 for attempt in range(0, MaxAttempts): # WARN 
   # Print attempt
   print("##########\nStarting attempt #{}/{}\n".format(attempt, MaxAttempts))
