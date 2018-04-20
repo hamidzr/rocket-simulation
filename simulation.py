@@ -2,6 +2,7 @@ from utils.atmosphere import Atmosphere
 from utils.simulation_data import SimulationData
 from utils.helpers import logger
 import numpy as np
+import matplotlib.pyplot as plt
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -377,20 +378,22 @@ vx = data.vx[0:I_land_BEST]
 Fd = data.Fd[0:I_land_BEST]
 
 # TODO plots
-# figure(0)
-# plot(t, vz)
-# xlabel('Time')
-# ylabel("Altitude")
-# title("Altitude vs Time")
+plt.figure(0)
+plt.plot(t, vz)
+plt.xlabel('Time')
+plt.ylabel("Altitude")
+plt.title("Altitude vs Time")
 
-# figure(2)
-# plot(t, vx)
-# xlabel('Time')
-# ylabel("Horizontal Position")
-# title("X vs Time")
+plt.figure(1)
+plt.plot(t, vx)
+plt.xlabel('Time')
+plt.ylabel("Horizontal Position")
+plt.title("X vs Time")
 
-# figure(3)
-# plot(t, Fd)
-# xlabel('Time')
-# ylabel("Drag")
-# title("Fd vs Time")
+plt.figure(2)
+plt.plot(t, Fd)
+plt.xlabel('Time')
+plt.ylabel("Drag")
+plt.title("Fd vs Time")
+
+plt.show()
