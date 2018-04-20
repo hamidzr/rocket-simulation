@@ -217,7 +217,7 @@ def SolveLandingBurn(data, I_apex):
     if landedSafely:
       print("--- Landed safely after #{} attempts.\n".format(attempt))
       print("--- Landing burn altitude = {}m\n".format(landingBurnAltitude))
-      return
+      return landingBurnAltitude
     # end
 
     # Ok well did we stop burning early?
@@ -232,7 +232,7 @@ def SolveLandingBurn(data, I_apex):
       # regardless of when we burn. Fail
       if data.z[burnStopped_I] <= 500:
         print("--- Ran out of fuel at low altitude.\n")
-        return
+        return landingBurnAltitude
       # end
 
       # Otherwise we should reduce the altitude by bulk.
