@@ -377,9 +377,9 @@ x = data.x[0:I_land_BEST]
 vx = data.vx[0:I_land_BEST]
 Fd = data.Fd[0:I_land_BEST]
 
-# TODO plots
+
 plt.figure(0)
-plt.plot(t, vz)
+plt.plot(t, z)
 plt.xlabel('Time')
 plt.ylabel("Altitude")
 plt.title("Altitude vs Time")
