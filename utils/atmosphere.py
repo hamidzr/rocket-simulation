@@ -1,5 +1,15 @@
 import numpy as np
-from utils.helpers import logger, filter, isreal
+from utils.helpers import logger, memoize, filter, isreal
+
+# find index of the last item in z_arr that is bigger than is 'le' to z
+arr_len = None
+def theFind(arr, z):
+  global arr_len
+  if (not arr_len): arr_len = len(arr)
+  for idx in range(arr_len-1, -1, -1):
+    if arr[idx] <= z:
+      return idx
+  assert False, 'it should never reach this line'
 
 class Atmosphere:
   def __init__(self):
@@ -14,8 +24,8 @@ class Atmosphere:
     self.R = 287
 
   def _Dynamics(self, z):
-    # idx = max(find(z >= self.z_arr)) #TODO find index of the last item in z_arr that is bigger than is 'le' to z
-    idx = max(filter(lambda x: z >= x, self.z_arr))
+    # idx = max(find(z >= self.z_arr)) # find index of the last item in z_arr that is bigger than is 'le' to z
+    idx = theFind(self.z_arr, z)
     T0 = self.T0_arr[idx]
     p0 = self.p0_arr[idx]
     B = self.B_arr[idx]
@@ -36,7 +46,7 @@ class Atmosphere:
     else:
       # First calculate temperature
       T = T0 + B * (z - z0)
-      if T < self.Tmin or  not isreal(T): #TODO
+      if T < self.Tmin: #or not isreal(T): # WARN
         T = self.Tmin
       # end
 
@@ -48,7 +58,7 @@ class Atmosphere:
       # end
 
       # Keep to a min
-      if p < self.pMin or  not isreal(p):
+      if p < self.pMin: #or not isreal(p):
         p = self.pMin
       # end
     # end

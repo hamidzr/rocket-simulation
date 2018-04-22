@@ -4,18 +4,6 @@ from utils.helpers import logger
 # WARN TODO arrays start at 1 in matlab, array indices are refrenced w/ ()
 class SimulationData:
   def __init__(self, dt, tMax):
-    # self.dt = 0.01
-    # self.t = []
-    # self.Fd = []
-    # self.Ft = []
-    # self.m = []
-    # self.theta = []
-    # self.z = []
-    # self.vz = []
-    # self.az = []
-    # self.x = []
-    # self.vx = []
-    # self.ax = []
 
     self.I = 1 # WARN changed 2 to 1
 
