@@ -70,7 +70,7 @@ def SolveTakeoffAngle(launch_ratio, data):
       # Angle of attack + Drag
       relWind = data.RelativeWind()
       # data.Fd[data.I] = 0.5 * Cd_up * A * rho * relWind.^2
-      data.Fd[data.I] = 0.5 * Cd_up * A * rho * np.power(relWind, 2)
+      data.Fd[data.I] = 0.5 * Cd_up * A * rho * (relWind ** 2)
 
       # Axial -> X/Y
       a_axial = (data.Ft[data.I] - data.Fd[data.I]) / data.m[data.I]
@@ -188,7 +188,7 @@ def SolveLandingBurn(data, I_apex):
       # Angle of attack + Drag
       relWind = data.RelativeWind()
       # data.Fd[data.I] = 0.5 * Cd_down * A * rho * relWind.^2
-      data.Fd[data.I] = 0.5 * Cd_down * A * rho * np.power(relWind, 2)
+      data.Fd[data.I] = 0.5 * Cd_down * A * rho * (relWind ** 2)
 
       # Axial -> X/Y
       a_axial = (data.Ft[data.I] + data.Fd[data.I]) / data.m[data.I]
@@ -260,7 +260,7 @@ m0_full = m0_propellant + mSecondStage + mEmpty # kg
 Cd_up = 0.3
 Cd_down = 0.82
 N = 9 # Number of engines
-A = np.power(3.7, 2) / 4 # Diameter of 3.7m
+A = (3.7 ** 2) / 4 # Diameter of 3.7m
 Thrust_vacuum = 8227000 # N
 Thrust_ground = 7607000 # N
 Isp_vacuum = 311 # s

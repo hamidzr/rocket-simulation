@@ -75,6 +75,7 @@ class SimulationData:
     self.z[self.I] = self.z[self.I-1] + 0.5 * dvz * self.dt + self.vz[self.I-1] * self.dt
 
   def NextFrame(self):
+    # assert self.I <= self.simulation_length, 'frame out of range'
     self.I = self.I + 1
 
   def RemainingMass(self, m0): #TODO
@@ -83,8 +84,8 @@ class SimulationData:
 
   def velocity(self, offset):
     # v = (self.vz[self.I + offset].^2 + self.vx[self.I + offset].^2).^0.5
-    t1 = np.power(self.vz[self.I + offset], 2) # WARN changes
-    t2 = np.power(self.vx[self.I + offset], 2)
+    t1 = (self.vz[self.I + offset] ** 2) # WARN changes
+    t2 = (self.vx[self.I + offset] ** 2)
     v = t1 + np.sqrt(t2)
     return v
 
