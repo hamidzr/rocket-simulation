@@ -329,105 +329,148 @@ I_apex_BEST = 0 # WARN was 1
 I_land_BEST = 0
 
 # Create simulation data
-data = SimulationData(args.dt, 2000)
+dt = args.dt
+data = SimulationData(dt, 2000)
 
 # keep track of experiments
-attempt_histories = [] # [(angles, alts), ...] len of maxAttempts
+attempts_history = [] # [(angles, alts), ...] len of maxAttempts
 ratios = []
 
 ## The Model
-print("Starting search......\n")
-ratioAdjustment = 0.01
-ratioAdjustmentDir = -1
-MaxAttempts = args.max_attempts
-for attempt in range(0, MaxAttempts): # WARN 
-  ratios.append(launch_ratio)
-  # Print attempt
-  print("##########\nStarting attempt #{}/{}\n".format(attempt, MaxAttempts))
-  if launch_ratio > MAX_LAUNCH_RATIO:
-    launch_ratio = MAX_LAUNCH_RATIO
-  # end
-  print("Launch fuel ratio = {}\n".format(launch_ratio))
-
-  # Solve the takeoff angle
-  print("1) Solving takeoff angle......\n")
-  [takeoff_angle, success, (angles, errors)] = SolveTakeoffAngle(launch_ratio, data)
-  I_apex = data.I
-  if success == 0:
-    print("--- Takeoff angle search failed.  Increasing launch ratio.\n")
-    if ratioAdjustmentDir == -1:
-      ratioAdjustment = ratioAdjustment/2
+def simulate():
+  global launch_ratio, MaxDiscoveredVx
+  print("Starting search......\n")
+  ratioAdjustment = 0.01
+  ratioAdjustmentDir = -1
+  MaxAttempts = args.max_attempts
+  for attempt in range(0, MaxAttempts): # WARN 
+    ratios.append(launch_ratio)
+    # Print attempt
+    print("##########\nStarting attempt #{}/{}\n".format(attempt, MaxAttempts))
+    if launch_ratio > MAX_LAUNCH_RATIO:
+      launch_ratio = MAX_LAUNCH_RATIO
     # end
-    launch_ratio = launch_ratio + ratioAdjustment
-    ratioAdjustmentDir = 1
-    continue
-  # end
-  print("--- Found takeoff angle = {}\n".format(takeoff_angle))
+    print("Launch fuel ratio = {}\n".format(launch_ratio))
 
-  # Detach second stage
-  print("2) Detaching second stage.\n")
-  data.m[I_apex] = data.m[I_apex] - mSecondStage
-
-  # At this point we're at apex.  Time to solve best landing burn
-  print("3) Solving landing burn......\n")
-  landingBurnAltitude, altitudes = SolveLandingBurn(data, I_apex+1)
-  I_land = data.I
-
-  # Print some stats
-  remainingMass = data.RemainingMass(mEmpty)
-  landingSpeed = data.velocity(0)
-  print("--- Landed with {}kg of fuel at {}m/s.\n".format(remainingMass, landingSpeed))
-
-  # Is this optimal?
-  if data.vx[I_apex] >= MaxDiscoveredVx and landingSpeed < LandingVelocityAllowance:
-    print("*** This is a new optimal spec!\n")
-    MaxDiscoveredVx = data.vx[I_apex]
-    launch_ratio_BEST = launch_ratio
-    takeoff_angle_BEST = takeoff_angle
-    landingBurnAltitude_BEST = landingBurnAltitude
-    I_apex_BEST = I_apex
-    I_land_BEST = I_land
-  # end
-
-  # Increase or decrease fuel burn ratio
-  if remainingMass > 0 and abs(landingSpeed) < LandingVelocityAllowance:
-    print("Increasing launch fuel ratio.\n")
-    if ratioAdjustmentDir == -1:
-      ratioAdjustment = ratioAdjustment/2
+    # Solve the takeoff angle
+    print("1) Solving takeoff angle......\n")
+    [takeoff_angle, success, (angles, errors)] = SolveTakeoffAngle(launch_ratio, data)
+    I_apex = data.I
+    if success == 0:
+      print("--- Takeoff angle search failed.  Increasing launch ratio.\n")
+      if ratioAdjustmentDir == -1:
+        ratioAdjustment = ratioAdjustment/2
+      # end
+      launch_ratio = launch_ratio + ratioAdjustment
+      ratioAdjustmentDir = 1
+      continue
     # end
-    launch_ratio = launch_ratio + ratioAdjustment
-    ratioAdjustmentDir = 1
+    print("--- Found takeoff angle = {}\n".format(takeoff_angle))
 
+    # Detach second stage
+    print("2) Detaching second stage.\n")
+    data.m[I_apex] = data.m[I_apex] - mSecondStage
 
-  else:
-    print("Reducing launch fuel ratio due to land failure.\n")
-    if ratioAdjustmentDir == 1:
-      ratioAdjustment = ratioAdjustment/2
+    # At this point we're at apex.  Time to solve best landing burn
+    print("3) Solving landing burn......\n")
+    landingBurnAltitude, altitudes = SolveLandingBurn(data, I_apex+1)
+    I_land = data.I
+
+    # Print some stats
+    remainingMass = data.RemainingMass(mEmpty)
+    landingSpeed = data.velocity(0)
+    print("--- Landed with {}kg of fuel at {}m/s.\n".format(remainingMass, landingSpeed))
+
+    # Is this optimal?
+    if data.vx[I_apex] >= MaxDiscoveredVx and landingSpeed < LandingVelocityAllowance:
+      print("*** This is a new optimal spec!\n")
+      MaxDiscoveredVx = data.vx[I_apex]
+      launch_ratio_BEST = launch_ratio
+      takeoff_angle_BEST = takeoff_angle
+      landingBurnAltitude_BEST = landingBurnAltitude
+      I_apex_BEST = I_apex
+      I_land_BEST = I_land
     # end
-    launch_ratio = launch_ratio - ratioAdjustment
-    ratioAdjustmentDir = -1
-  # end
 
-  attempt_histories.append((angles, altitudes))
+    # Increase or decrease fuel burn ratio
+    if remainingMass > 0 and abs(landingSpeed) < LandingVelocityAllowance:
+      print("Increasing launch fuel ratio.\n")
+      if ratioAdjustmentDir == -1:
+        ratioAdjustment = ratioAdjustment/2
+      # end
+      launch_ratio = launch_ratio + ratioAdjustment
+      ratioAdjustmentDir = 1
+
+
+    else:
+      print("Reducing launch fuel ratio due to land failure.\n")
+      if ratioAdjustmentDir == 1:
+        ratioAdjustment = ratioAdjustment/2
+      # end
+      launch_ratio = launch_ratio - ratioAdjustment
+      ratioAdjustmentDir = -1
+    # end
+
+    attempts_history.append((angles, altitudes))
 # end
 
-# First need to trim the results
-t = data.t[0:I_land_BEST]
-z = data.z[0:I_land_BEST]
-vz = data.vz[0:I_land_BEST]
-az = data.az[0:I_land_BEST]
-x = data.x[0:I_land_BEST]
-vx = data.vx[0:I_land_BEST]
-Fd = data.Fd[0:I_land_BEST]
+if not args.load:
+  simulate()
+  # First need to trim the results
+  t = data.t[0:I_land_BEST]
+  z = data.z[0:I_land_BEST]
+  vz = data.vz[0:I_land_BEST]
+  az = data.az[0:I_land_BEST]
+  x = data.x[0:I_land_BEST]
+  vx = data.vx[0:I_land_BEST]
+  Fd = data.Fd[0:I_land_BEST]
+  print("##########\nAlgorithm complete!\n")
+  print("Best launch ratio = {}\n".format(launch_ratio_BEST))
+  print("Required takeoff angle = {}\n".format(takeoff_angle_BEST))
+  print("Achieved horizontal velocity = {} m/s\n".format(MaxDiscoveredVx))
+  print("Landing Burn Altitude = {}\n".format(landingBurnAltitude_BEST))
+else:
+  # load the data
+  print('loadig simulation data..')
+  (results, how, ratios, attempts_history) = load(args.load)
 
-print("##########\nAlgorithm complete!\n")
-print("Best launch ratio = {}\n".format(launch_ratio_BEST))
-print("Required takeoff angle = {}\n".format(takeoff_angle_BEST))
-print("Achieved horizontal velocity = {} m/s\n".format(MaxDiscoveredVx))
-print("Landing Burn Altitude = {}\n".format(landingBurnAltitude_BEST))
+  dt = results['dt']
+
+  t = how['t']
+  z = how['z']
+  vz = how['vz']
+  az = how['az']
+  x = how['x']
+  vx = how['vx']
+  Fd = how['Fd']
+
+  print('loaded saved simulation data')
+  print(results)
+
+if (args.save):
+  print('saving simulation data..')
+  how = {
+    't': data.t[0:I_land_BEST],
+    'z': data.z[0:I_land_BEST],
+    'vz': data.vz[0:I_land_BEST],
+    'az': data.az[0:I_land_BEST],
+    'x': data.x[0:I_land_BEST],
+    'vx': data.vx[0:I_land_BEST],
+    'Fd': data.Fd[0:I_land_BEST]
+  }
+  results = {
+    'dt': dt,
+    'launch_ratio': launch_ratio_BEST,
+    'i_land': I_land_BEST,
+    'takeoff_angle': takeoff_angle_BEST,
+    'max_discovered_vx': MaxDiscoveredVx,
+    'landing_burn_altitude': landingBurnAltitude_BEST,
+  }
+  data = (results, how, ratios, attempts_history)
+  dump(f'{args.save}', data)
+
 
 ## Plots
-
 plt.figure(0)
 plt.plot(t, z)
 plt.xlabel('Time')
@@ -449,31 +492,15 @@ plt.ylabel("Drag")
 plt.title("Fd vs Time")
 plt.savefig('figs/fd-time.jpg')
 
-plot_attempts(ratios, f'dt{args.dt}-ratios.jpg',
+plot_attempts(ratios, f'dt{dt}-ratios.jpg',
              ylabel='landing burn altitude', title='Explored ratios')
 
-for attempt, (angles, altitudes) in enumerate(attempt_histories):
+for attempt, (angles, altitudes) in enumerate(attempts_history):
   # plot attempts
   angles = np.array(angles) * 10000
-  plot_attempts(angles, f'dt{args.dt}-a{attempt}-angles.jpg',
+  plot_attempts(angles, f'dt{dt}-a{attempt}-angles.jpg',
                ylabel='takeoff angle (*10e-3)', title=f'Explored angles at LR {launch_ratio} - Attempt #{attempt+1}')
   altitudes = np.array(altitudes) / 1000
-  plot_attempts(altitudes, f'dt{args.dt}-a{attempt}-altitudes.jpg',
+  plot_attempts(altitudes, f'dt{dt}-a{attempt}-altitudes.jpg',
                ylabel='landing burn altitude (1km)', title=f'Explored altitudes at LR {launch_ratio} - Attempt #{attempt+1}')
 
-if (args.save):
-  optimal = {
-    'launch_ratio': launch_ratio_BEST,
-    'takeoff_angle': takeoff_angle_BEST,
-    'max_discovered_vx': MaxDiscoveredVx,
-    'landing_burn_altitude': landingBurnAltitude_BEST,
-    't': data.t[0:I_land_BEST],
-    'z': data.z[0:I_land_BEST],
-    'vz': data.vz[0:I_land_BEST],
-    'az': data.az[0:I_land_BEST],
-    'x': data.x[0:I_land_BEST],
-    'vx': data.vx[0:I_land_BEST],
-    'Fd': data.Fd[0:I_land_BEST]
-  }
-  data = (optimal, ratios, attempt_histories)
-  save(data, f'out/{args.save}')
