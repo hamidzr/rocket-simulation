@@ -3,13 +3,14 @@ from utils.simulation_data import SimulationData
 from utils.helpers import logger, plot_attempts, dump, load
 import numpy as np
 import matplotlib.pyplot as plt
+matplotlib.use('agg') # to have it work in remote machines
 import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dt", type=float, default=0.001, help="simulation tick")
 parser.add_argument("--max_attempts", type=int, default=10, help="max number of attempts")
-parser.add_argument("--save", type=str , help="save results to file")
-parser.add_argument("--load", type=str , help="load from file insted of computing")
+parser.add_argument("--save", type=str, default='out/default.out', help="save results to file")
+parser.add_argument("--load", type=str, help="load from file insted of computing")
 args = parser.parse_args()
 
 
