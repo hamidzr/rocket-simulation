@@ -84,8 +84,8 @@ class SimulationData:
 
   def velocity(self, offset):
     # v = (self.vz[self.I + offset].^2 + self.vx[self.I + offset].^2).^0.5
-    t1 = (self.vz[self.I + offset] ** 2) # WARN changes
-    t2 = (self.vx[self.I + offset] ** 2)
-    v = t1 + np.sqrt(t2)
+    t1 = self.vz[self.I + offset] ** 2
+    t2 = self.vx[self.I + offset] ** 2
+    v = np.sqrt(t1 + t2)
     return v
 
