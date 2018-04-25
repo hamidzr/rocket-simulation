@@ -1,6 +1,6 @@
 from utils.atmosphere import Atmosphere
 from utils.simulation_data import SimulationData
-from utils.helpers import logger, plot_attempts
+from utils.helpers import logger, plot_attempts, dump, load
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
@@ -8,6 +8,8 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("--dt", type=float, default=0.001, help="simulation tick")
 parser.add_argument("--max_attempts", type=int, default=10, help="max number of attempts")
+parser.add_argument("--save", type=str , help="save results to file")
+parser.add_argument("--load", type=str , help="load from file insted of computing")
 args = parser.parse_args()
 
 
@@ -427,3 +429,20 @@ plt.xlabel('Time')
 plt.ylabel("Drag")
 plt.title("Fd vs Time")
 plt.savefig('figs/fd-time.jpg')
+
+if (args.save):
+  optimal = {
+    'launch_ratio': launch_ratio_BEST,
+    'takeoff_angle': takeoff_angle_BEST,
+    'max_discovered_vx': MaxDiscoveredVx,
+    'landing_burn_altitude': landingBurnAltitude_BEST,
+    't': data.t[0:I_land_BEST],
+    'z': data.z[0:I_land_BEST],
+    'vz': data.vz[0:I_land_BEST],
+    'az': data.az[0:I_land_BEST],
+    'x': data.x[0:I_land_BEST],
+    'vx': data.vx[0:I_land_BEST],
+    'Fd': data.Fd[0:I_land_BEST]
+  }
+  data = (optimal, ratios, attempt_histories)
+  save(data, f'out/{args.save}')

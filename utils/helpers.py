@@ -1,3 +1,4 @@
+import json
 import logging, os
 from functools import wraps
 import numpy as np
@@ -37,10 +38,19 @@ def memoize(f):
 
 def plot_attempts(values, fname, xlabel='Try#', ylabel=None, title=None):
   tries = np.linspace(1,len(values), len(values), dtype=int)
-  plt.scatter(tries, values)
+  plt.scatter(tries, values, c='g')
   plt.plot(tries, values)
   plt.xlabel(xlabel)
   plt.ylabel(ylabel)
   plt.title(title)
   plt.savefig('figs/' + fname)
   plt.close()
+
+
+def dump(fname, data):
+  with open(fname, 'w', encoding='UTF-8') as f:
+    json.dump(data, f)
+
+def load(fname):
+  with open(fname, 'r', encoding='UTF-8') as f:
+    return json.load(f)
