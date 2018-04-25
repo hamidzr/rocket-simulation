@@ -3,7 +3,6 @@ from utils.simulation_data import SimulationData
 from utils.helpers import logger, plot_attempts, dump, load
 import numpy as np
 import matplotlib.pyplot as plt
-matplotlib.use('agg') # to have it work in remote machines
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -339,7 +338,9 @@ ratios = []
 
 ## The Model
 def simulate():
-  global launch_ratio, MaxDiscoveredVx
+  global MAX_LAUNCH_RATIO, launch_ratio, launch_ratio_BEST, MaxDiscoveredVx
+  global takeoff_angle, takeoff_angle_BEST, landingBurnAltitude
+  global landingBurnAltitude_BEST, I_apex_BEST, I_land_BEST
   print("Starting search......\n")
   ratioAdjustment = 0.01
   ratioAdjustmentDir = -1
