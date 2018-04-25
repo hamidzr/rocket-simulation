@@ -332,6 +332,7 @@ I_land_BEST = 0
 data = SimulationData(args.dt, 2000)
 
 # keep track of experiments
+attempt_histories = [] # [(angles, alts), ...] len of maxAttempts
 ratios = []
 
 ## The Model
@@ -407,25 +408,9 @@ for attempt in range(0, MaxAttempts): # WARN
     ratioAdjustmentDir = -1
   # end
 
-  # plot attempts
-  angles = np.array(angles) * 10000
-  plot_attempts(angles, f'dt{args.dt}-a{attempt}-angles.jpg',
-               ylabel='takeoff angle (y*10k)', title=f'Explored angles at LR {launch_ratio}')
-  altitudes = np.array(altitudes) / 1000
-  plot_attempts(altitudes, f'dt{args.dt}-a{attempt}-altitudes.jpg',
-               ylabel='landing burn altitude (y/1km)', title=f'Explored altitudes at LR {launch_ratio}')
+  attempt_histories.append((angles, altitudes))
 # end
-plot_attempts(ratios, f'dt{args.dt}-ratios.jpg',
-             ylabel='landing burn altitude', title='Explored ratios')
 
-print("##########\nAlgorithm complete!\n")
-print("Best launch ratio = {}\n".format(launch_ratio_BEST))
-print("Required takeoff angle = {}\n".format(takeoff_angle_BEST))
-print("Achieved horizontal velocity = {} m/s\n".format(MaxDiscoveredVx))
-print("Landing Burn Altitude = {}\n".format(landingBurnAltitude_BEST))
-
-
-## Plots
 # First need to trim the results
 t = data.t[0:I_land_BEST]
 z = data.z[0:I_land_BEST]
@@ -435,6 +420,13 @@ x = data.x[0:I_land_BEST]
 vx = data.vx[0:I_land_BEST]
 Fd = data.Fd[0:I_land_BEST]
 
+print("##########\nAlgorithm complete!\n")
+print("Best launch ratio = {}\n".format(launch_ratio_BEST))
+print("Required takeoff angle = {}\n".format(takeoff_angle_BEST))
+print("Achieved horizontal velocity = {} m/s\n".format(MaxDiscoveredVx))
+print("Landing Burn Altitude = {}\n".format(landingBurnAltitude_BEST))
+
+## Plots
 
 plt.figure(0)
 plt.plot(t, z)
@@ -456,6 +448,18 @@ plt.xlabel('Time')
 plt.ylabel("Drag")
 plt.title("Fd vs Time")
 plt.savefig('figs/fd-time.jpg')
+
+plot_attempts(ratios, f'dt{args.dt}-ratios.jpg',
+             ylabel='landing burn altitude', title='Explored ratios')
+
+for attempt, (angles, altitudes) in enumerate(attempt_histories):
+  # plot attempts
+  angles = np.array(angles) * 10000
+  plot_attempts(angles, f'dt{args.dt}-a{attempt}-angles.jpg',
+               ylabel='takeoff angle (*10e-3)', title=f'Explored angles at LR {launch_ratio} - Attempt #{attempt+1}')
+  altitudes = np.array(altitudes) / 1000
+  plot_attempts(altitudes, f'dt{args.dt}-a{attempt}-altitudes.jpg',
+               ylabel='landing burn altitude (1km)', title=f'Explored altitudes at LR {launch_ratio} - Attempt #{attempt+1}')
 
 if (args.save):
   optimal = {
