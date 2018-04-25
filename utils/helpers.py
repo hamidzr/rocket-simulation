@@ -1,6 +1,7 @@
 import logging, os
 from functools import wraps
 import numpy as np
+import matplotlib.pyplot as plt
 
 logging.basicConfig(level=getattr(logging, os.getenv('DEBUG', 'INFO')))
 logger = logging.getLogger('rocket')
@@ -34,3 +35,12 @@ def memoize(f):
         return result
     return decorated
 
+def plot_attempts(values, fname, xlabel='Try#', ylabel=None, title=None):
+  tries = np.linspace(1,len(values), len(values), dtype=int)
+  plt.scatter(tries, values)
+  plt.plot(tries, values)
+  plt.xlabel(xlabel)
+  plt.ylabel(ylabel)
+  plt.title(title)
+  plt.savefig('figs/' + fname)
+  plt.close()

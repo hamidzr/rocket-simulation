@@ -1,6 +1,6 @@
 from utils.atmosphere import Atmosphere
 from utils.simulation_data import SimulationData
-from utils.helpers import logger
+from utils.helpers import logger, plot_attempts
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
@@ -50,6 +50,11 @@ def SolveTakeoffAngle(launch_ratio, data):
   adjustmentDir = 1
   attempt = 1
   errorAllowance = 0.001
+
+  # keep track of what values you tried
+  angles = []
+  errors = []
+
   while True: # Keep looping until terminated
     # Initial conditions
     data.theta[0] = 0
@@ -93,10 +98,14 @@ def SolveTakeoffAngle(launch_ratio, data):
     # Evaluate
     attempt = attempt + 1
     error = abs(data.z[data.I] - TargetAltitude)
+
+    angles.append(takeoff_angle)
+    errors.append(error)
+
     if error <= TargetAltitude * errorAllowance:
       success = 1
       print("--- Error = {}m after {} attempts.\n".format(error, attempt))
-      return [takeoff_angle, success]
+      return [takeoff_angle, success, (angles, errors)]
     # end
 
     # logger.debug(data.z[data.I])
@@ -105,9 +114,11 @@ def SolveTakeoffAngle(launch_ratio, data):
     # logger.debug('x', data.x[0:10])
     if data.z[data.I] < TargetAltitude:
       # If takeoff angle is 0, not enough fuel!
+      # QUESTOIN why not set this at the begining and check this?
       if takeoff_angle == 0:
         success = 0
-        return [takeoff_angle, success]
+        print(f'wasted {attempt} to figureout there is not enough fuel')
+        return [takeoff_angle, success, (angles, errors)]
       # end
 
       # Need to decrease the angle
@@ -127,7 +138,7 @@ def SolveTakeoffAngle(launch_ratio, data):
       adjustmentDir = 1
     # end
   # end
-  return [takeoff_angle, success]
+  return [takeoff_angle, success, (angles, errors)]
 # end
 
 
@@ -147,6 +158,10 @@ def SolveLandingBurn(data, I_apex):
 
   # Iterate the times until there
   landingBurnAltitude = 27000 # Pick an abitrary start
+
+  # keep track of attempts
+  altitudes = []
+
   # for attempt = 1:40
   for attempt in range(0, 40): #WARN
     # Reset I to the apex
@@ -155,6 +170,7 @@ def SolveLandingBurn(data, I_apex):
     burnStopped_I = 0 # Set when burn stops
     manualBurnShutdown = 0 # When burn is manually stopped due to sufficient slowdown
     outOfFuel = 0 # When burn expires due to lack of fuel
+    altitudes.append(landingBurnAltitude)
 
     # Loop until landed
     while data.z[data.I-1] > 0:
@@ -218,7 +234,7 @@ def SolveLandingBurn(data, I_apex):
     if landedSafely:
       print("--- Landed safely after #{} attempts.\n".format(attempt))
       print("--- Landing burn altitude = {}m\n".format(landingBurnAltitude))
-      return landingBurnAltitude
+      return landingBurnAltitude, altitudes
     # end
 
     # Ok well did we stop burning early?
@@ -233,7 +249,7 @@ def SolveLandingBurn(data, I_apex):
       # regardless of when we burn. Fail
       if data.z[burnStopped_I] <= 500:
         print("--- Ran out of fuel at low altitude.\n")
-        return landingBurnAltitude
+        return landingBurnAltitude, altitudes
       # end
 
       # Otherwise we should reduce the altitude by bulk.
@@ -246,7 +262,7 @@ def SolveLandingBurn(data, I_apex):
     # end
   # end
   print("--- Number of attempts has expired.\n")
-  return landingBurnAltitude
+  return landingBurnAltitude, altitudes
 # end
 
 ## Global parameters
@@ -286,6 +302,8 @@ I_land_BEST = 0
 # Create simulation data
 data = SimulationData(args.dt, 2000)
 
+# keep track of experiments
+ratios = []
 
 ## The Model
 print("Starting search......\n")
@@ -293,6 +311,7 @@ ratioAdjustment = 0.01
 ratioAdjustmentDir = -1
 MaxAttempts = args.max_attempts
 for attempt in range(0, MaxAttempts): # WARN 
+  ratios.append(launch_ratio)
   # Print attempt
   print("##########\nStarting attempt #{}/{}\n".format(attempt, MaxAttempts))
   if launch_ratio > MAX_LAUNCH_RATIO:
@@ -302,7 +321,7 @@ for attempt in range(0, MaxAttempts): # WARN
 
   # Solve the takeoff angle
   print("1) Solving takeoff angle......\n")
-  [takeoff_angle, success] = SolveTakeoffAngle(launch_ratio, data)
+  [takeoff_angle, success, (angles, errors)] = SolveTakeoffAngle(launch_ratio, data)
   I_apex = data.I
   if success == 0:
     print("--- Takeoff angle search failed.  Increasing launch ratio.\n")
@@ -321,7 +340,7 @@ for attempt in range(0, MaxAttempts): # WARN
 
   # At this point we're at apex.  Time to solve best landing burn
   print("3) Solving landing burn......\n")
-  landingBurnAltitude = SolveLandingBurn(data, I_apex+1)
+  landingBurnAltitude, altitudes = SolveLandingBurn(data, I_apex+1)
   I_land = data.I
 
   # Print some stats
@@ -358,7 +377,17 @@ for attempt in range(0, MaxAttempts): # WARN
     launch_ratio = launch_ratio - ratioAdjustment
     ratioAdjustmentDir = -1
   # end
+
+  # plot attempts
+  angles = np.array(angles) * 10000
+  plot_attempts(angles, f'dt{args.dt}-a{attempt}-angles.jpg',
+               ylabel='takeoff angle (y*10k)', title=f'Explored angles at LR {launch_ratio}')
+  altitudes = np.array(altitudes) / 1000
+  plot_attempts(altitudes, f'dt{args.dt}-a{attempt}-altitudes.jpg',
+               ylabel='landing burn altitude (y/1km)', title=f'Explored altitudes at LR {launch_ratio}')
 # end
+plot_attempts(ratios, f'dt{args.dt}-ratios.jpg',
+             ylabel='landing burn altitude', title='Explored ratios')
 
 print("##########\nAlgorithm complete!\n")
 print("Best launch ratio = {}\n".format(launch_ratio_BEST))
