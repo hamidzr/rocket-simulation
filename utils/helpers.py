@@ -1,5 +1,5 @@
-import json
 import logging, os
+import pickle
 from functools import wraps
 import numpy as np
 import matplotlib.pyplot as plt
@@ -48,9 +48,9 @@ def plot_attempts(values, fname, xlabel='Try#', ylabel=None, title=None):
 
 
 def dump(fname, data):
-  with open(fname, 'w', encoding='UTF-8') as f:
-    json.dump(data, f)
+  with open(fname, 'wb') as f:
+    pickle.dump(data, f)
 
 def load(fname):
-  with open(fname, 'r', encoding='UTF-8') as f:
-    return json.load(f)
+  with open(fname, 'rb') as f:
+    return pickle.load(f)
