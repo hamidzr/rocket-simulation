@@ -178,7 +178,7 @@ def SolveLandingBurn(data, I_apex):
       effective_change = aAdjVal * direction
 
 
-    print(f'{effective_change} alt because {reason}')
+    print(f'{round(effective_change, 1)} alt because {reason}')
     landingBurnAltitude = landingBurnAltitude + effective_change
     aAdjDir = direction # keep track of cur direction
 
@@ -268,7 +268,7 @@ def SolveLandingBurn(data, I_apex):
       # Let's just reduce the burn altitude by that much
       # landingBurnAltitude = landingBurnAltitude - data.z[burnStopped_I]
       shutdown_alt = data.z[burnStopped_I]
-      adjust_landing_alt(-1, constant=shutdown_alt, reason=f'manual shutdown at {shutdown_alt}')
+      adjust_landing_alt(-1, constant=shutdown_alt, reason=f'manual shutdown at {round(shutdown_alt)}m alt')
 
     # Did we run out of fuel?
     elif outOfFuel:
@@ -287,7 +287,7 @@ def SolveLandingBurn(data, I_apex):
     else:
       # Increase altitude based on amount of fuel remaining
       assert remainingFuel > 0
-      adjust_landing_alt(+1, constant=remainingFuel/3, reason=f'crashed w/ {remainingFuel} remaining fuel')
+      adjust_landing_alt(+1, constant=remainingFuel/3, reason=f'crashed w/ {round(remainingFuel)}kg remaining fuel')
     # end
   # end
   print("--- Number of attempts has expired.\n")
