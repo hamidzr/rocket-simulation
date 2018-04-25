@@ -38,8 +38,8 @@ def memoize(f):
 
 def plot_attempts(values, fname, xlabel='Try#', ylabel=None, title=None):
   tries = np.linspace(1,len(values), len(values), dtype=int)
-  plt.scatter(tries, values, c='g')
-  plt.plot(tries, values)
+  plt.scatter(tries, values, c='green')
+  plt.plot(tries, values, c='b', linewidth=1)
   plt.xlabel(xlabel)
   plt.ylabel(ylabel)
   plt.title(title)

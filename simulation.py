@@ -471,29 +471,30 @@ if (args.save):
 
 
 ## Plots
-plt.figure(0)
 plt.plot(t, z)
 plt.xlabel('Time')
 plt.ylabel("Altitude")
 plt.title("Altitude vs Time")
 plt.savefig('figs/alt-time.jpg')
+plt.close()
 
-plt.figure(1)
 plt.plot(t, vx)
 plt.xlabel('Time')
 plt.ylabel("Horizontal Position")
 plt.title("X vs Time")
 plt.savefig('figs/x-time.jpg')
+plt.close()
 
-plt.figure(2)
 plt.plot(t, Fd)
 plt.xlabel('Time')
 plt.ylabel("Drag")
 plt.title("Fd vs Time")
 plt.savefig('figs/fd-time.jpg')
+plt.close()
 
 plot_attempts(ratios, f'dt{dt}-ratios.jpg',
              ylabel='landing burn altitude', title='Explored ratios')
+plt.close()
 
 for attempt, (angles, altitudes) in enumerate(attempts_history):
   # plot attempts
@@ -503,4 +504,3 @@ for attempt, (angles, altitudes) in enumerate(attempts_history):
   altitudes = np.array(altitudes) / 1000
   plot_attempts(altitudes, f'dt{dt}-a{attempt}-altitudes.jpg',
                ylabel='landing burn altitude (1km)', title=f'Explored altitudes at LR {launch_ratio} - Attempt #{attempt+1}')
-
