@@ -160,6 +160,29 @@ def SolveLandingBurn(data, I_apex):
 
   # Iterate the times until there
   landingBurnAltitude = 27000 # Pick an abitrary start
+  aAdjDir = 0
+  aAdjVal = 2000
+  adjRatio = 0.7
+
+  # dir +1 or -1; constant is False or a value
+  def adjust_landing_alt(direction, constant=False, reason=None):
+    nonlocal aAdjDir, aAdjVal, adjRatio, landingBurnAltitude
+    assert direction == 1 or direction == -1, 'illegal input'
+
+    if aAdjDir == -1 * direction: # if changing dir
+      aAdjVal = aAdjVal * adjRatio # binary search effect
+
+    if constant:
+      effective_change = constant * direction
+    else:
+      effective_change = aAdjVal * direction
+
+
+    print(f'{effective_change} alt because {reason}')
+    landingBurnAltitude = landingBurnAltitude + effective_change
+    aAdjDir = direction # keep track of cur direction
+
+
 
   # keep track of attempts
   altitudes = []
@@ -221,7 +244,8 @@ def SolveLandingBurn(data, I_apex):
 
       # Next frame
       data.NextFrame()
-    # end
+    # end landed at this point
+
 
     # Rewind a frame
     data.I = data.I - 1
@@ -242,7 +266,9 @@ def SolveLandingBurn(data, I_apex):
     # Ok well did we stop burning early?
     if manualBurnShutdown > 0:
       # Let's just reduce the burn altitude by that much
-      landingBurnAltitude = landingBurnAltitude - data.z[burnStopped_I]
+      # landingBurnAltitude = landingBurnAltitude - data.z[burnStopped_I]
+      shutdown_alt = data.z[burnStopped_I]
+      adjust_landing_alt(-1, constant=shutdown_alt, reason=f'manual shutdown at {shutdown_alt}')
 
     # Did we run out of fuel?
     elif outOfFuel:
@@ -255,12 +281,13 @@ def SolveLandingBurn(data, I_apex):
       # end
 
       # Otherwise we should reduce the altitude by bulk.
-      landingBurnAltitude = landingBurnAltitude - 500
+      adjust_landing_alt(-1, constant=500, reason="out of fuel at high alt")
 
     # Crashed while still burning!
     else:
       # Increase altitude based on amount of fuel remaining
-      landingBurnAltitude = landingBurnAltitude + remainingFuel/3
+      assert remainingFuel > 0
+      adjust_landing_alt(+1, constant=remainingFuel/3, reason=f'crashed w/ {remainingFuel} remaining fuel')
     # end
   # end
   print("--- Number of attempts has expired.\n")
