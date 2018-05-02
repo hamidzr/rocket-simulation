@@ -3,7 +3,7 @@ import pickle
 from functools import wraps
 import numpy as np
 import matplotlib
-matplotlib.use('agg') # to have it work in remote machines
+if not os.getenv('DISPLAY'): matplotlib.use('agg') # to have it work in remote machines
 import matplotlib.pyplot as plt
 
 logging.basicConfig(level=getattr(logging, os.getenv('DEBUG', 'INFO')))
