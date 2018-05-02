@@ -37,6 +37,7 @@ Isp_vacuum = 311 # s
 Isp_ground = 282 # s
 vjet = 3000
 TargetAltitude = 200000 # m
+errorAllowance = 0.0001 # target altitude error allowance
 LandingVelocityAllowance = 6 # m/s
 
 
@@ -94,10 +95,9 @@ def SolveTakeoffAngle(launch_ratio, data):
   # Iterate the times until there
   # use the best takeoff angle so far
   takeoff_angle = takeoff_angle_BEST if takeoff_angle_BEST else takeoff_angle
-  adjustment =  0.00001 # Start adjustment
+  adjustment =  0.000005 # Start adjustment
   adjustmentDir = 1
   attempt = 1
-  errorAllowance = 0.001
 
   # keep track of what values you tried
   angles = []
@@ -322,16 +322,17 @@ def SolveLandingBurn(data, I_apex):
 
     # Did we run out of fuel?
     elif outOfFuel:
-      # If we ran out of fuel at ~500m or less, and didn't reach nearly
+      LOW_ALT = 200
+      # If we ran out of fuel at ~ LOW_ALT meters or less, and didn't reach nearly
       # safe velocities, then chances are we just didn't have enough fuel
       # regardless of when we burn. Fail
-      if data.z[burnStopped_I] <= 500:
+      if data.z[burnStopped_I] <= LOW_ALT:
         print("--- Ran out of fuel at low altitude.\n")
         return landingBurnAltitude, altitudes
       # end
 
       # Otherwise we should reduce the altitude by bulk.
-      adjust_landing_alt(-1, constant=500, reason="out of fuel at high alt")
+      adjust_landing_alt(-1, constant=LOW_ALT, reason="out of fuel at high alt")
 
     # Crashed while still burning!
     else:
