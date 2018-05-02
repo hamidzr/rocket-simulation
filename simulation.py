@@ -18,6 +18,48 @@ args = parser.parse_args()
 # Grant Fennessy
 # Hamid Zare
 
+
+## Global parameters
+# global atmosphere LandingVelocityAllowance TargetAltitude mSecondStage
+# global m0_propellant mEmpty m0_full Cd_up Cd_down Pe Ae mdot vjet A
+atmosphere = Atmosphere()
+mSecondStage = 111500 # kg
+m0_propellant = 433100 #kg
+mEmpty = 22200 # kg
+m0_full = m0_propellant + mSecondStage + mEmpty # kg
+Cd_up = 0.3
+Cd_down = 0.82
+N = 9 # Number of engines
+A = (3.7 ** 2) / 4 # Diameter of 3.7m
+Thrust_vacuum = 8227000 # N
+Thrust_ground = 7607000 # N
+Isp_vacuum = 311 # s
+Isp_ground = 282 # s
+vjet = 3000
+TargetAltitude = 200000 # m
+LandingVelocityAllowance = 6 # m/s
+
+
+# Parameters being solved
+MAX_LAUNCH_RATIO = 0.99999999 # should never happen, but prevents >= 1.
+launch_ratio = 0.94
+launch_ratio_BEST = launch_ratio
+MaxDiscoveredVx = 0
+takeoff_angle = 0.00034 # Start attempt angle
+takeoff_angle_BEST = None
+landingBurnAltitude = 25000 # Pick an abitrary start
+landingBurnAltitude_BEST = None
+I_apex_BEST = 0 # WARN was 1
+I_land_BEST = 0
+
+# Create simulation data
+dt = args.dt
+data = SimulationData(dt, 2000)
+
+# keep track of experiments
+attempts_history = [] # [(angles, alts), ...] len of maxAttempts
+ratios = []
+
 def SolveThrust(vjet, T_sea, T_vac, Isp_sea, Isp_vac, N):
   # Vacuum first
   mdot_vac = T_vac / (Isp_vac * 9.81)
@@ -34,12 +76,14 @@ def SolveThrust(vjet, T_sea, T_vac, Isp_sea, Isp_vac, N):
   mdot = (mdot_vac + mdot_sea) / (2 * N)
   return [pe, Ae, mdot]
 
+[Pe, Ae, mdot] = SolveThrust(vjet, Thrust_ground, Thrust_vacuum, Isp_ground, Isp_vacuum, N)
+
 ## Solve Takeoff Angle
 # Responsible for solving the takeoff angle given a launch ratio.
 # Will start at 0 to ensure the desired altitude can even be reached.
 def SolveTakeoffAngle(launch_ratio, data):
   # Bring in globals
-  global atmosphere, TargetAltitude, mSecondStage, A
+  global atmosphere, TargetAltitude, mSecondStage, A, takeoff_angle
   global m0_propellant, mEmpty, m0_full, Cd_up, Pe, Ae, mdot, vjet
 
   # Determine when to stop
@@ -48,8 +92,9 @@ def SolveTakeoffAngle(launch_ratio, data):
   data.SetInitialConditions(m0_full)
 
   # Iterate the times until there
-  takeoff_angle = 0.000333 # Start attempt angle
-  adjustment =  0.000001 # Start adjustment
+  # use the best takeoff angle so far
+  takeoff_angle = takeoff_angle_BEST if takeoff_angle_BEST else takeoff_angle
+  adjustment =  0.00001 # Start adjustment
   adjustmentDir = 1
   attempt = 1
   errorAllowance = 0.001
@@ -62,6 +107,7 @@ def SolveTakeoffAngle(launch_ratio, data):
     # Initial conditions
     data.theta[0] = 0
 
+    print(f'testing angle {takeoff_angle}')
     # Loop until at peak altitude
     data.ResetFrame()
     while data.vz[data.I-1] >= 0:
@@ -152,7 +198,7 @@ def SolveTakeoffAngle(launch_ratio, data):
 # Will start at 0 to ensure the desired altitude can even be reached.
 def SolveLandingBurn(data, I_apex):
   # Bring in globals
-  global atmosphere, LandingVelocityAllowance, A
+  global atmosphere, LandingVelocityAllowance, A, landingBurnAltitude
   global mEmpty, Cd_down, Pe, Ae, mdot, vjet
 
   # Determine when to stop
@@ -160,14 +206,16 @@ def SolveLandingBurn(data, I_apex):
   stopMass = mEmpty # Stop when no more propellant
 
   # Iterate the times until there
-  landingBurnAltitude = 27000 # Pick an abitrary start
+  # use the best takeoff angle so far
+  landingBurnAltitude = landingBurnAltitude_BEST if landingBurnAltitude_BEST else landingBurnAltitude
   aAdjDir = 0
   aAdjVal = 2000
   adjRatio = 0.7
 
   # dir +1 or -1; constant is False or a value
   def adjust_landing_alt(direction, constant=False, reason=None):
-    nonlocal aAdjDir, aAdjVal, adjRatio, landingBurnAltitude
+    nonlocal aAdjDir, aAdjVal, adjRatio
+    global landingBurnAltitude
     assert direction == 1 or direction == -1, 'illegal input'
 
     if aAdjDir == -1 * direction: # if changing dir
@@ -269,7 +317,8 @@ def SolveLandingBurn(data, I_apex):
       # Let's just reduce the burn altitude by that much
       # landingBurnAltitude = landingBurnAltitude - data.z[burnStopped_I]
       shutdown_alt = data.z[burnStopped_I]
-      adjust_landing_alt(-1, constant=shutdown_alt, reason=f'manual shutdown at {round(shutdown_alt)}m alt')
+      ALT_FUEL_RATIO = 1.8 # empirical
+      adjust_landing_alt(-1, constant=shutdown_alt*ALT_FUEL_RATIO, reason=f'manual shutdown at {round(shutdown_alt)}m alt')
 
     # Did we run out of fuel?
     elif outOfFuel:
@@ -294,48 +343,6 @@ def SolveLandingBurn(data, I_apex):
   print("--- Number of attempts has expired.\n")
   return landingBurnAltitude, altitudes
 # end
-
-## Global parameters
-# global atmosphere LandingVelocityAllowance TargetAltitude mSecondStage
-# global m0_propellant mEmpty m0_full Cd_up Cd_down Pe Ae mdot vjet A
-atmosphere = Atmosphere()
-mSecondStage = 111500 # kg
-m0_propellant = 433100 #kg
-mEmpty = 22200 # kg
-m0_full = m0_propellant + mSecondStage + mEmpty # kg
-Cd_up = 0.3
-Cd_down = 0.82
-N = 9 # Number of engines
-A = (3.7 ** 2) / 4 # Diameter of 3.7m
-Thrust_vacuum = 8227000 # N
-Thrust_ground = 7607000 # N
-Isp_vacuum = 311 # s
-Isp_ground = 282 # s
-vjet = 3000
-TargetAltitude = 200000 # m
-LandingVelocityAllowance = 6 # m/s
-[Pe, Ae, mdot] = SolveThrust(vjet, Thrust_ground, Thrust_vacuum, Isp_ground, Isp_vacuum, N)
-
-
-# Parameters being solved
-MAX_LAUNCH_RATIO = 0.99999999 # should never happen, but prevents >= 1.
-launch_ratio = 0.94
-launch_ratio_BEST = launch_ratio
-MaxDiscoveredVx = 0
-takeoff_angle = 0.00001
-takeoff_angle_BEST = takeoff_angle
-landingBurnAltitude = 6000 # m
-landingBurnAltitude_BEST = landingBurnAltitude
-I_apex_BEST = 0 # WARN was 1
-I_land_BEST = 0
-
-# Create simulation data
-dt = args.dt
-data = SimulationData(dt, 2000)
-
-# keep track of experiments
-attempts_history = [] # [(angles, alts), ...] len of maxAttempts
-ratios = []
 
 ## The Model
 def simulate():
