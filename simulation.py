@@ -1,9 +1,10 @@
 from utils.atmosphere import Atmosphere
 from utils.simulation_data import SimulationData
-from utils.helpers import logger, plot_attempts, dump, load
+from utils.helpers import logger, plot_attempts, dump, load, plot_batch_attempts
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
+import time
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dt", type=float, default=0.001, help="simulation tick")
@@ -417,7 +418,9 @@ def simulate():
 # end
 
 if not args.load:
+  print('Simulation started at:', time.ctime())
   simulate()
+  print('Simulation finished at:', time.ctime())
   # First need to trim the results
   t = data.t[0:I_land_BEST]
   z = data.z[0:I_land_BEST]
@@ -449,7 +452,7 @@ else:
   print('loaded saved simulation data')
   print(results)
 
-if (args.save):
+if (not args.load and args.save):
   print('saving simulation data..')
   how = {
     't': data.t[0:I_land_BEST],
@@ -472,7 +475,8 @@ if (args.save):
   dump(f'{args.save}', data)
 
 
-## Plots
+########## Plots ###############
+
 plt.plot(t, z)
 plt.xlabel('Time')
 plt.ylabel("Altitude")
@@ -494,15 +498,61 @@ plt.title("Fd vs Time")
 plt.savefig('figs/fd-time.jpg')
 plt.close()
 
+plt.plot(t, az)
+plt.xlabel('Time')
+plt.ylabel("Acceleration")
+plt.title("Az vs Time")
+plt.savefig('figs/vertical-acceleration-time.jpg')
+plt.close()
+
+plt.plot(t, z, label="z")
+plt.plot(t, x, label="x")
+plt.xlabel('Time')
+plt.ylabel("Position")
+plt.title("Position vs Time")
+plt.legend()
+plt.savefig('figs/position-time.jpg')
+plt.close()
+
+plt.plot(t, vz, label="vz")
+plt.plot(t, vx, label="vx")
+plt.xlabel('Time')
+plt.ylabel("Speed")
+plt.title("Speed vs Time")
+plt.legend()
+plt.savefig('figs/speed-time.jpg')
+plt.close()
+
 plot_attempts(ratios, f'dt{dt}-ratios.jpg',
              ylabel='landing burn altitude', title='Explored ratios')
 plt.close()
 
+
+# plot individual attempts
 for attempt, (angles, altitudes) in enumerate(attempts_history):
   # plot attempts
   angles = np.array(angles) * 10000
-  plot_attempts(angles, f'dt{dt}-a{attempt}-angles.jpg',
-               ylabel='takeoff angle (*10e-3)', title=f'Explored angles at LR {launch_ratio} - Attempt #{attempt+1}')
+  plot_attempts(angles, fname=f'dt{dt}-a{attempt}-angles.jpg',
+               ylabel='takeoff angle (*1e+4)',
+               title=f'Explored angles at LR {ratios[attempt]} - Attempt #{attempt+1}',
+               line_label='Angles')
   altitudes = np.array(altitudes) / 1000
-  plot_attempts(altitudes, f'dt{dt}-a{attempt}-altitudes.jpg',
-               ylabel='landing burn altitude (1km)', title=f'Explored altitudes at LR {launch_ratio} - Attempt #{attempt+1}')
+  plot_attempts(altitudes, fname=f'dt{dt}-a{attempt}-altitudes.jpg',
+               ylabel='landing burn altitude (1km)',
+               title=f'Explored altitudes at LR {ratios[attempt]} - Attempt #{attempt+1}',
+               line_label="Altitutdes")
+
+
+angles_arr = []
+altitudes_arr = []
+for attempt, (angles, altitudes) in enumerate(attempts_history):
+  angles_arr.append(np.array(angles) * 1e+4)
+  altitudes_arr.append(np.array(altitudes) / 1000)
+
+plot_batch_attempts(altitudes_arr, ratios, fname=f'dt{dt}-altitudes.jpg',
+               ylabel='Landing burn altitude (km)',
+               title=f'Landing Burn Altitude State Space Exploration')
+
+plot_batch_attempts(angles_arr, ratios, fname=f'dt{dt}-angles.jpg',
+               ylabel='Takeoff angle (*1e+4)',
+               title=f'Takeoff Angle State Space Exploration')
