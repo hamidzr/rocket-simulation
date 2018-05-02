@@ -56,6 +56,11 @@ def _longest(l):
     return(max([len(l),] + [len(subl) for subl in l if isinstance(subl, list)] +
         [_longest(subl) for subl in l]))
 
+def sort_two_lists(list1, list2):
+  list1, list2 = zip(*sorted(zip(list1, list2)))
+  list1, list2 = (list(t) for t in zip(*sorted(zip(list1, list2))))
+  return list1, list2
+
 # plots all of angle attemps or landing altitude attempts
 def plot_batch_attempts(values_arr, ratios, fname=None, xlabel='Try#', ylabel=None, title=None):
   for attempt, values in enumerate(values_arr):

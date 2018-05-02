@@ -1,6 +1,6 @@
 from utils.atmosphere import Atmosphere
 from utils.simulation_data import SimulationData
-from utils.helpers import logger, plot_attempts, dump, load, plot_batch_attempts
+from utils.helpers import logger, plot_attempts, dump, load, plot_batch_attempts, sort_two_lists
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
@@ -521,6 +521,14 @@ plt.legend()
 plt.savefig('figs/position-time.jpg')
 plt.close()
 
+plt.plot(x, z)
+plt.xlabel('Horizontal Pos')
+plt.ylabel("Vertical Pos")
+plt.title("X vs Z")
+plt.legend()
+plt.savefig('figs/x-z.jpg')
+plt.close()
+
 plt.plot(t, vz, label="vz")
 plt.plot(t, vx, label="vx")
 plt.xlabel('Time')
@@ -528,6 +536,35 @@ plt.ylabel("Speed")
 plt.title("Speed vs Time")
 plt.legend()
 plt.savefig('figs/speed-time.jpg')
+plt.close()
+
+# launch ratios vs takeoff angles
+best_angles = []
+best_altitudes = []
+for attempt, (angles, altitudes) in enumerate(attempts_history):
+  best_angle = angles[-1] *10000
+  best_alt = altitudes[-1]
+  best_angles.append(best_angle)
+  best_altitudes.append(best_alt)
+
+r1 = ratios[:]
+r1, best_altitude = sort_two_lists(r1, best_altitudes)
+plt.plot(r1, best_altitudes)
+plt.scatter(r1, best_altitudes)
+plt.xlabel('Launch ratio')
+plt.ylabel("Burn altitude (m)")
+plt.title("Launch Ratio vs Landing Burn ltitudes")
+plt.savefig('figs/lr-altitude.jpg')
+plt.close()
+
+r2 = ratios[:]
+r2, best_angles = sort_two_lists(r2, best_angles)
+plt.plot(r2, best_angles)
+plt.scatter(r2, best_angles)
+plt.xlabel('Launch ratio')
+plt.ylabel("Takeoff angle (*1e+4)")
+plt.title("Launch Ratio vs Takeoff Angle ")
+plt.savefig('figs/lr-angle.jpg')
 plt.close()
 
 plot_attempts(ratios, f'dt{dt}-ratios.jpg',
