@@ -78,8 +78,9 @@ class SimulationData:
     # assert self.I <= self.simulation_length, 'frame out of range'
     self.I = self.I + 1
 
-  def RemainingMass(self, m0): #TODO
+  def RemainingMass(self, m0):
     mass = self.m[self.I] - m0
+    if mass < 0: mass = 0
     return mass
 
   def velocity(self, offset):
