@@ -38,15 +38,38 @@ def memoize(f):
         return result
     return decorated
 
-def plot_attempts(values, fname, xlabel='Try#', ylabel=None, title=None):
+def plot_attempts(values, fname=None, xlabel='Try#', ylabel=None, title=None, line_label=None):
   tries = np.linspace(1,len(values), len(values), dtype=int)
   plt.scatter(tries, values, c='green')
-  plt.plot(tries, values, c='b', linewidth=1)
+  plt.plot(tries, values, c='b', linewidth=1, label=line_label)
   plt.xlabel(xlabel)
   plt.ylabel(ylabel)
   plt.title(title)
-  plt.savefig('figs/' + fname)
-  plt.close()
+  if fname:
+    plt.savefig('figs/' + fname)
+    plt.close()
+
+
+# finds the longest sub list
+def _longest(l):
+    if(not isinstance(l, list)): return(0)
+    return(max([len(l),] + [len(subl) for subl in l if isinstance(subl, list)] +
+        [_longest(subl) for subl in l]))
+
+# plots all of angle attemps or landing altitude attempts
+def plot_batch_attempts(values_arr, ratios, fname=None, xlabel='Try#', ylabel=None, title=None):
+  for attempt, values in enumerate(values_arr):
+    tries = np.linspace(1,len(values), len(values), dtype=int)
+    plt.scatter(tries, values)
+    plt.plot(tries, values, linewidth=1, label=f'#{attempt}: {ratios[attempt]:.5}')
+
+  plt.xlabel(xlabel)
+  plt.ylabel(ylabel)
+  plt.title(title)
+  plt.legend()
+  if fname:
+    plt.savefig('figs/' + fname)
+    plt.close()
 
 
 def dump(fname, data):
