@@ -211,6 +211,7 @@ def SolveLandingBurn(data, I_apex):
   aAdjDir = 0
   aAdjVal = 2000
   adjRatio = 0.7
+  SHUTDOWN_ALT_RATIO = 1.8 # how much should the altitude be changed based on the engine shutoff alt empirical
 
   # dir +1 or -1; constant is False or a value
   def adjust_landing_alt(direction, constant=False, reason=None):
@@ -317,12 +318,11 @@ def SolveLandingBurn(data, I_apex):
       # Let's just reduce the burn altitude by that much
       # landingBurnAltitude = landingBurnAltitude - data.z[burnStopped_I]
       shutdown_alt = data.z[burnStopped_I]
-      ALT_FUEL_RATIO = 1.8 # empirical
-      adjust_landing_alt(-1, constant=shutdown_alt*ALT_FUEL_RATIO, reason=f'manual shutdown at {round(shutdown_alt)}m alt')
+      adjust_landing_alt(-1, constant=shutdown_alt*SHUTDOWN_ALT_RATIO, reason=f'manual shutdown at {round(shutdown_alt)}m alt')
 
     # Did we run out of fuel?
     elif outOfFuel:
-      LOW_ALT = 200
+      LOW_ALT = 5
       # If we ran out of fuel at ~ LOW_ALT meters or less, and didn't reach nearly
       # safe velocities, then chances are we just didn't have enough fuel
       # regardless of when we burn. Fail
@@ -331,8 +331,9 @@ def SolveLandingBurn(data, I_apex):
         return landingBurnAltitude, altitudes
       # end
 
-      # Otherwise we should reduce the altitude by bulk.
-      adjust_landing_alt(-1, constant=LOW_ALT, reason="out of fuel at high alt")
+      # Otherwise we should reduce the altitude
+      shutdown_alt = data.z[burnStopped_I]
+      adjust_landing_alt(-1, constant=shutdown_alt*SHUTDOWN_ALT_RATIO, reason="out of fuel at high alt")
 
     # Crashed while still burning!
     else:
