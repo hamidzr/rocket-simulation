@@ -38,10 +38,10 @@ def memoize(f):
         return result
     return decorated
 
-def plot_attempts(values, fname=None, xlabel='Try#', ylabel=None, title=None, line_label=None):
-  tries = np.linspace(1,len(values), len(values), dtype=int)
-  plt.scatter(tries, values, c='green')
-  plt.plot(tries, values, c='b', linewidth=1, label=line_label)
+def plot_attempts(values, fname=None, xlabel='Iteration', ylabel=None, title=None, line_label=None):
+  iters = np.linspace(1,len(values), len(values), dtype=int)
+  plt.scatter(iters, values, c='green')
+  plt.plot(iters, values, c='b', linewidth=1, label=line_label)
   plt.xlabel(xlabel)
   plt.ylabel(ylabel)
   plt.title(title)
@@ -62,11 +62,11 @@ def sort_two_lists(list1, list2):
   return list1, list2
 
 # plots all of angle attemps or landing altitude attempts
-def plot_batch_attempts(values_arr, ratios, fname=None, xlabel='Try#', ylabel=None, title=None):
+def plot_batch_attempts(values_arr, ratios, fname=None, xlabel='Iteration', ylabel=None, title=None):
   for attempt, values in enumerate(values_arr):
-    tries = np.linspace(1,len(values), len(values), dtype=int)
-    plt.scatter(tries, values)
-    plt.plot(tries, values, linewidth=1, label=f'#{attempt}: {ratios[attempt]:.5}')
+    iters = np.linspace(1,len(values), len(values), dtype=int)
+    plt.scatter(iters, values)
+    plt.plot(iters, values, linewidth=1, label=f'#{attempt}: {ratios[attempt]:.5}')
 
   plt.xlabel(xlabel)
   plt.ylabel(ylabel)
