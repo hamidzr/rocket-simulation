@@ -1,5 +1,11 @@
 import numpy as np
-from utils.helpers import logger, memoize, filter, isreal
+from utils.helpers import logger, memoize, filter, isreal, dump, load, plot_attempts
+import os.path
+import matplotlib.pyplot as plt
+from joblib import Parallel, delayed
+import multiprocessing
+num_cores = multiprocessing.cpu_count()
+
 
 # find index of the last item in z_arr that is bigger than is 'le' to z
 arr_len = None
@@ -69,3 +75,33 @@ class Atmosphere:
     return [p, rho, T, g]
 # end
 
+if __name__ == "__main__":
+  # plot atmosphere vs alt
+  # do we need to compute it?
+  dt = 1e-3
+  target_alt = 2e+5
+  fname = f'out/atmosphere-dt{dt}'
+  print('preparing the data..')
+  if not os.path.isfile(fname):
+    atm = Atmosphere()
+    history = {
+      'pa': [],
+      'rho': [],
+      't': [],
+      'g': [],
+    }
+    count = target_alt / dt
+    zs = np.linspace(1, 200000, count)
+    values = Parallel(n_jobs=num_cores)(delayed(atm.ParametersAtAltitude)(z) for z in zs)
+    for [Pa, rho, T, g] in values:
+      history['pa'].append(Pa)
+      history['rho'].append(rho)
+      history['t'].append(T)
+      history['g'].append(g)
+    dump(fname, history)
+  else:
+    history = load(fname)
+
+  print('plotting..')
+  plot_attempts(history['pa'])
+  plt.show()
