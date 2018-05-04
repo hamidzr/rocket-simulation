@@ -445,7 +445,7 @@ if not args.load:
   print("Landing Burn Altitude = {}\n".format(landingBurnAltitude_BEST))
 else:
   # load the data
-  print('loadig simulation data..')
+  print('loading simulation data..')
   (results, how, ratios, attempts_history) = load(args.load)
 
   dt = results['dt']
@@ -530,9 +530,11 @@ plt.legend()
 plt.savefig(f'figs/dt{dt}-position-time.jpg')
 plt.close()
 
-plt.plot(x, z)
-plt.xlabel('Horizontal Pos')
-plt.ylabel("Vertical Pos")
+x_km = x[:] / 1000
+z_km = z[:] / 1000
+plt.plot(x_km, z_km)
+plt.xlabel('Horizontal Position (km)')
+plt.ylabel('Altitude (km)')
 plt.title("X vs Z")
 plt.axis('equal')
 plt.legend()
@@ -553,12 +555,12 @@ best_angles = []
 best_altitudes = []
 for attempt, (angles, altitudes) in enumerate(attempts_history):
   best_angle = angles[-1] *10000
-  best_alt = altitudes[-1]
+  best_alt = altitudes[-1] /1000 # convert it to km
   best_angles.append(best_angle)
   best_altitudes.append(best_alt)
 
 r1 = ratios[:]
-r1, best_altitude = sort_two_lists(r1, best_altitudes)
+r1, best_altitudes = sort_two_lists(r1, best_altitudes)
 plt.plot(r1, best_altitudes)
 plt.scatter(r1, best_altitudes)
 plt.xlabel('Launch ratio')
@@ -572,13 +574,13 @@ r2, best_angles = sort_two_lists(r2, best_angles)
 plt.plot(r2, best_angles)
 plt.scatter(r2, best_angles)
 plt.xlabel('Launch ratio')
-plt.ylabel("Best takeoff angle (*1e+4)")
+plt.ylabel("Solved takeoff angle (1e-4 radians)")
 plt.title("Launch Ratio vs Takeoff Angle ")
 plt.savefig(f'figs/dt{dt}-lr-angle.jpg')
 plt.close()
 
 plot_attempts(ratios, f'dt{dt}-ratios.jpg',
-             ylabel='landing burn altitude', title='Explored ratios')
+             ylabel='Fuel takeoff ratio', title='Explored ratios')
 plt.close()
 
 
@@ -608,5 +610,5 @@ plot_batch_attempts(altitudes_arr, ratios, fname=f'dt{dt}-altitudes.jpg',
                title=f'Landing Burn Altitude State Space Exploration')
 
 plot_batch_attempts(angles_arr, ratios, fname=f'dt{dt}-angles.jpg',
-               ylabel='Takeoff angle (*1e+4)',
+               ylabel='Takeoff angle (1e-4 radians)',
                title=f'Takeoff Angle State Space Exploration')
