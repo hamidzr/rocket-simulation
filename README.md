@@ -11,6 +11,7 @@ which minimizes leftover fuel after landing, and thus maximizes the horizontal
 velocity attained at apogee.
 
 ## Running the simulation
+We initially did the simulation in using __Matlab__ we then ported it to __Python__ to analyze and improve the performance.
 
 For running the python version, issue `python simulation.py --help` to get the availabe arguments
 
